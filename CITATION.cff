@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+title: "MathBridge EdTech"
+message: "If you use this software, please cite the repository."
+type: software
+
+authors:
+  - family-names: "Habrusiev"
+    given-names: "Hryhorii"
+    affiliation: "Ternopil Ivan Puluj National Technical University"
+
+repository-code: "https://github.com/hryhorko/mathbridge"
+
+url: "https://hryhorko.github.io/mathbridge/"
+
+license: MIT
+
+keywords:
+  - education
+  - LMS
+  - ATutor
+  - JupyterHub
+  - JWT
+  - SageMath
+  - Docker
+  - STEM
+
+abstract: >
+  MathBridge EdTech is an open-source educational ecosystem
+  integrating ATutor LMS with JupyterHub using JWT-based
+  single sign-on authentication.
+
+version: "0.1.0"
+
+date-released: "2026-08-07"
