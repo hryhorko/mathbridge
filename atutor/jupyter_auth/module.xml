@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module version="1.0">
+    <name lang="en">JupyterHub JWT Authentication</name>
+    <name lang="uk">JupyterHub JWT авторизація</name>
+
+    <description lang="en">
+        Single Sign-On integration between ATutor and JupyterHub using JWT tokens.
+    </description>
+
+    <description lang="uk">
+        Інтеграція єдиного входу між ATutor та JupyterHub за допомогою JWT-токенів.
+    </description>
+
+    <author>Hryhorii Habrusiev</author>
+    <url>https://github.com/hryhorko/mathbridge</url>
+    <license>MIT</license>
+
+    <release>
+        <version>1.0.0</version>
+        <date>2026-08-09</date>
+        <state>stable</state>
+    </release>
+</module>
