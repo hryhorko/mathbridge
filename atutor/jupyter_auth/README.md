@@ -1,776 +1,445 @@
-\# ATutor JupyterHub JWT Authentication Module
+# MathBridge EdTech
 
+**MathBridge EdTech** is an open-source academic research and development project focused on building a lightweight digital educational ecosystem for teaching mathematics and other STEM disciplines.
 
+The project integrates a Learning Management System (LMS) with interactive computational environments, providing students with a unified access point for computational tools used in mathematical and engineering education.
 
-\## Overview
+The current implementation integrates **ATutor LMS** with **JupyterHub** using a lightweight JWT-based Single Sign-On (SSO) mechanism and Docker-based user isolation.
 
+---
 
+## Project Status
 
-`jupyter\_auth` is a custom module for the ATutor Learning Management System that provides Single Sign-On (SSO) integration with JupyterHub using JSON Web Tokens (JWT).
+MathBridge is an **active academic research and development project**.
 
+The current repository contains a working prototype of the ATutor–JupyterHub integration based on JWT-based Single Sign-On (SSO).
 
+The prototype has been deployed and experimentally evaluated in an academic environment. The current implementation demonstrates the feasibility of integrating an LMS with a multi-user interactive computational environment without requiring an external identity provider.
 
-The module allows an authenticated ATutor user to access JupyterHub without entering a second username and password.
+The next development phase focuses on cloud deployment and a broader educational pilot involving engineering students at **Ternopil National Technical University (TNTU), Ukraine**.
 
+The project is currently under active development.
 
+---
 
-The module generates a short-lived JWT containing the authenticated ATutor username and redirects the browser to the configured JupyterHub endpoint.
+## Research Context
 
+MathBridge is developed in the context of research on lightweight integration of Learning Management Systems with interactive computational environments for STEM education.
 
+The current implementation is described and evaluated in the research article:
+
+> **ATutor–JupyterHub Integration: A JWT-Based SSO Approach**
+
+The repository contains software artifacts associated with the implementation described in the research.
+
+Additional experimental, deployment, and reproducibility artifacts will be added as the research project progresses.
+
+---
+
+## Motivation
+
+Modern STEM education increasingly requires access to interactive computational environments for programming, numerical analysis, symbolic mathematics, and data science.
+
+However, integrating such environments with existing LMS platforms can introduce additional authentication mechanisms, administrative complexity, and infrastructure requirements.
+
+MathBridge investigates a lightweight approach in which an existing LMS serves as the primary educational entry point while JupyterHub provides an interactive computational environment.
+
+The goal is to create a unified educational workflow in which students can move from the LMS to their computational environment without performing a separate login.
+
+The project is particularly focused on educational institutions with limited infrastructure and administrative resources, where large-scale cloud-native architectures may be unnecessarily complex for the expected workload.
+
+---
+
+## Current Architecture
+
+The current prototype uses the following architecture:
 
 ```text
-
-ATutor
-
-&#x20; │
-
-&#x20; │ authenticated user
-
-&#x20; ▼
-
-jupyter\_auth
-
-&#x20; │
-
-&#x20; │ HS256-signed JWT
-
-&#x20; ▼
-
-JupyterHub
-
-&#x20; │
-
-&#x20; ▼
-
-JWTAuthenticator
-
+                    MathBridge EdTech
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │   ATutor    │
+                    │     LMS     │
+                    └──────┬──────┘
+                           │
+                     JWT / HS256
+                           │
+                           ▼
+                  ┌──────────────────┐
+                  │    JupyterHub    │
+                  │ JWT Authenticator│
+                  └────────┬─────────┘
+                           │
+                    DockerSpawner
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+              ▼                         ▼
+        User container            User container
+              │                         │
+              ▼                         ▼
+        Computational            Computational
+         environment              environment
 ```
 
+The current architecture is intentionally lightweight and is designed for academic groups of moderate size.
 
+---
 
-\---
+## Main Components
 
+### ATutor LMS
 
+ATutor is used as the primary Learning Management System and educational entry point.
 
-\## Version
+A custom ATutor module provides:
 
+- integration with JupyterHub;
+- authentication-session verification;
+- JWT generation;
+- automatic redirection to JupyterHub;
+- module installation through the ATutor administration interface;
+- module uninstallation through the ATutor administration interface.
 
+### JWT-Based Single Sign-On
 
-\*\*jupyter\_auth 1.0.0\*\*
+The integration uses **JSON Web Tokens (JWT)** signed using **HMAC-SHA256 (HS256)**.
 
-
-
-This version implements the configuration-file-based version of the integration.
-
-
-
-The module does not require an additional database table for its configuration.
-
-
-
-\---
-
-
-
-\## Requirements
-
-
-
-The module requires:
-
-
-
-\* ATutor with module support;
-
-\* a running JupyterHub instance;
-
-\* a JupyterHub authenticator capable of validating the JWT generated by this module;
-
-\* a shared JWT signing secret between ATutor and JupyterHub;
-
-\* PHP with the functionality required by the host ATutor installation.
-
-
-
-The corresponding JupyterHub authenticator is included in this repository:
-
-
+The authentication flow is:
 
 ```text
-
-jupyterhub/authenticator/20-jwt-auth.py
-
+Student
+   │
+   ▼
+ATutor login
+   │
+   ▼
+Authenticated ATutor session
+   │
+   ▼
+JWT generation
+   │
+   ▼
+Redirect to JupyterHub
+   │
+   ▼
+JWT validation
+   │
+   ▼
+JupyterHub session
 ```
 
+The JWT contains the user identity and time-related claims used to limit token validity.
 
+No external OAuth2/OpenID Connect identity provider is required by the current prototype.
 
-\---
+### JupyterHub
 
+JupyterHub provides the multi-user interactive computational environment.
 
+A custom JWT authenticator validates the token generated by ATutor and establishes the JupyterHub user session.
 
-\## Installation
+### DockerSpawner
 
+DockerSpawner is used to provide isolated computational environments for individual users.
 
+This approach allows user environments to be separated while using a common server infrastructure.
 
-The module is installed using the standard ATutor module administration interface.
+---
 
+## Security Considerations
 
+The current prototype uses a shared secret for JWT signing and verification.
 
-\### 1. Prepare the module
+The same shared secret must be configured independently on both the ATutor and JupyterHub sides.
 
+**The actual secret must never be committed to the public repository.**
 
+Configuration files included in the repository contain placeholders rather than production credentials or secret keys.
 
-The module directory is:
+The current experimental deployment uses an HTTP endpoint within an isolated experimental environment.
 
+For production or deployment over an untrusted network, the JupyterHub endpoint should be protected using **HTTPS/TLS**.
 
+The JWT lifetime is intentionally limited in order to reduce the exposure window of a token if it is intercepted.
+
+---
+
+## Repository Structure
+
+The current repository is organized around the main software components of the prototype:
 
 ```text
-
-atutor/jupyter\_auth/
-
-```
-
-
-
-The directory contains:
-
-
-
-```text
-
-jupyter\_auth/
-
-├── index.php
-
-├── module.php
-
-├── module.sql
-
-├── module.xml
-
-├── module\_install.php
-
-├── module\_uninstall.php
-
+mathbridge/
+├── index.html
 ├── README.md
-
-└── include/
-
-&#x20;   ├── config.inc.php
-
-&#x20;   ├── jwt.inc.php
-
-&#x20;   └── redirect.inc.php
-
+├── LICENSE
+├── CITATION.cff
+├── CONTRIBUTING.md
+├── CODE_OF_CONDUCT.md
+├── .gitignore
+├── atutor/
+│   └── jupyter_auth/
+│       ├── include/
+│       ├── pages/
+│       ├── module.xml
+│       ├── module.sql
+│       └── ...
+└── jupyterhub/
+    └── authenticator/
+        ├── 20-jwt-auth.py
+        └── README.md
 ```
 
+The repository structure will be extended as additional experimental and reproducibility artifacts are prepared.
 
+---
 
-\### 2. Install through ATutor
+## Installation Overview
 
+The current prototype requires:
 
+- ATutor LMS;
+- JupyterHub;
+- Python environment compatible with the JupyterHub installation;
+- PyJWT;
+- Docker;
+- DockerSpawner;
+- a shared JWT secret configured independently on both systems.
 
-Log in to ATutor as an administrator and open the module administration interface.
-
-
-
-Upload or install the `jupyter\_auth` module using the standard ATutor module installation mechanism.
-
-
-
-After installation, the module should appear in the ATutor module list under the name:
-
-
-
-\*\*JupyterHub JWT Authentication\*\*
-
-
-
-The module provides the corresponding navigation entry for accessing JupyterHub.
-
-
-
-\---
-
-
-
-## Configuration
-
-After installing the module, the administrator must configure the connection to the JupyterHub instance.
-
-The configuration file is:
+The general deployment sequence is:
 
 ```text
-include/config.inc.php
+1. Install and configure ATutor
+2. Install and configure JupyterHub
+3. Install Docker and DockerSpawner
+4. Install the custom ATutor JWT module
+5. Configure the JupyterHub JWT authenticator
+6. Configure the same shared JWT secret on both sides
+7. Configure the JupyterHub URL in ATutor
+8. Restart the relevant services
+9. Test the SSO workflow
 ```
 
-Two parameters must be adjusted for each deployment:
+Detailed installation and configuration instructions are provided in the component-specific documentation.
 
-```php
-const HUB_URL = 'http://YOUR-JUPYTERHUB-HOST';
+---
 
-const TOKEN_LIFETIME = 300;
-```
+## ATutor Module
 
-### `HUB_URL`
-
-`HUB_URL` specifies the URL of the JupyterHub instance to which ATutor redirects authenticated users.
-
-Replace the example value:
-
-```php
-const HUB_URL = 'http://YOUR-JUPYTERHUB-HOST';
-```
-
-with the actual URL of the JupyterHub server used in the deployment.
-
-For example:
-
-```php
-const HUB_URL = 'http://192.168.1.100:8000';
-```
-
-The value must correspond to the address through which JupyterHub is accessible from the user's browser.
-
-### `TOKEN_LIFETIME`
-
-`TOKEN_LIFETIME` specifies the lifetime of the generated JWT token in seconds.
-
-The default value is:
-
-```php
-const TOKEN_LIFETIME = 300;
-```
-
-which corresponds to **5 minutes**.
-
-This value may be adjusted according to the deployment requirements. The lifetime should be long enough for the browser to complete the redirect and authentication process, while avoiding unnecessarily long-lived authentication tokens.
-
-### JWT Secret
-
-The JWT signing secret is a security-sensitive parameter.
-
-The ATutor module and the JupyterHub JWT authenticator **must use exactly the same secret**.
-
-The secret configured on the ATutor side:
+The ATutor component is located in:
 
 ```text
-JUPYTERHUB_JWT_SECRET
+atutor/jupyter_auth/
 ```
 
-must be identical to the secret used by the JupyterHub `JWTAuthenticator`.
+The module provides the integration point between ATutor and JupyterHub.
 
-For example, if the ATutor environment contains:
+The module can be installed and removed using the standard ATutor administration mechanisms.
+
+The implementation separates:
+
+- configuration;
+- JWT generation;
+- redirection;
+- module lifecycle operations.
+
+---
+
+## JupyterHub Authentication
+
+The JupyterHub authentication component is located in:
 
 ```text
-JUPYTERHUB_JWT_SECRET=<your-secret>
-```
-
-the JupyterHub authenticator must use the same value.
-
-A mismatch between the two secrets will cause JWT validation to fail and the SSO authentication will be rejected.
-
-**Never publish the actual JWT secret in the GitHub repository.**
-
-For a public repository, use a placeholder value in the source code and provide the real secret only in the deployment environment.
-
-### Configuration summary
-
-Before using the module, verify:
-
-| Parameter               | Required action                                         |
-| ----------------------- | ------------------------------------------------------- |
-| `HUB_URL`               | Replace with the actual JupyterHub URL                  |
-| `TOKEN_LIFETIME`        | Adjust if necessary; default is 300 seconds             |
-| `JUPYTERHUB_JWT_SECRET` | Configure the secret used by both ATutor and JupyterHub |
-
-The most important requirement is that the JWT secret used by ATutor for token generation is **identical** to the secret used by the JupyterHub JWT authenticator for token verification.
-
-
-
-\## JWT Generation
-
-
-
-The JWT generation logic is implemented in:
-
-
-
-```text
-
-include/jwt.inc.php
-
-```
-
-
-
-The module creates a token containing the authenticated ATutor username.
-
-
-
-The token is signed using:
-
-
-
-```text
-
-HS256
-
-```
-
-
-
-The token lifetime is intentionally limited in order to reduce the period during which a captured token could be reused.
-
-
-
-The general token structure is:
-
-
-
-```json
-
-{
-
-&#x20;   "username": "student01",
-
-&#x20;   "iat": 1720000000,
-
-&#x20;   "exp": 1720000060
-
-}
-
-```
-
-
-
-The actual timestamp values depend on the time at which the token is generated.
-
-
-
-The JupyterHub authenticator verifies the signature and checks the token validity before accepting the username.
-
-
-
-\---
-
-
-
-\## Authentication Workflow
-
-
-
-The module participates in the following authentication sequence:
-
-
-
-```text
-
-1\. User logs in to ATutor
-
-&#x20;         │
-
-&#x20;         ▼
-
-2\. User opens JupyterHub integration
-
-&#x20;         │
-
-&#x20;         ▼
-
-3\. jupyter\_auth obtains ATutor username
-
-&#x20;         │
-
-&#x20;         ▼
-
-4\. JWT is generated
-
-&#x20;         │
-
-&#x20;         ▼
-
-5\. Browser redirects to JupyterHub
-
-&#x20;         │
-
-&#x20;         ▼
-
-6\. JWTAuthenticator validates JWT
-
-&#x20;         │
-
-&#x20;         ▼
-
-7\. JupyterHub authenticates the user
-
-&#x20;         │
-
-&#x20;         ▼
-
-8\. User receives access to JupyterLab
-
-```
-
-
-
-No additional login form is required at the JupyterHub stage.
-
-
-
-\---
-
-
-
-\## Module Files
-
-
-
-\### `module.php`
-
-
-
-Defines the ATutor module and its navigation entry.
-
-
-
-It associates the module's language key with the JupyterHub integration page.
-
-
-
-\### `module.xml`
-
-
-
-Contains module metadata, including the module name, description, version, and release information.
-
-
-
-\### `module.sql`
-
-
-
-Contains the module's language strings required by ATutor.
-
-
-
-It is also used during module installation and removal.
-
-
-
-\### `module\_install.php`
-
-
-
-Performs the installation operations defined by the module.
-
-
-
-\### `module\_uninstall.php`
-
-
-
-Performs the reverse operations when the module is removed from ATutor.
-
-
-
-\### `index.php`
-
-
-
-Provides the module's main entry point.
-
-
-
-\### `include/config.inc.php`
-
-
-
-Contains deployment-specific configuration parameters.
-
-
-
-\### `include/jwt.inc.php`
-
-
-
-Contains JWT creation functionality.
-
-
-
-\### `include/redirect.inc.php`
-
-
-
-Handles the transition from ATutor to JupyterHub.
-
-
-
-\---
-
-
-
-\## Integration with JupyterHub
-
-
-
-The ATutor module is only one part of the SSO implementation.
-
-
-
-The corresponding JupyterHub component is:
-
-
-
-```text
-
-jupyterhub/authenticator/20-jwt-auth.py
-
-```
-
-
-
-Both components must use compatible JWT settings.
-
-
-
-In particular:
-
-
-
-```text
-
-ATutor                         JupyterHub
-
-\------------------------------------------------
-
-JWT secret       ────────────► JWT secret
-
-HS256 signing    ────────────► HS256 verification
-
-username claim   ────────────► username extraction
-
-expiration       ────────────► token validation
-
-```
-
-
-
-A mismatch in the signing secret or JWT algorithm will cause authentication to fail.
-
-
-
-\---
-
-
-
-\## User Switching
-
-
-
-The integration supports changing the authenticated ATutor user without requiring a separate browser session.
-
-
-
-For example:
-
-
-
-```text
-
-Browser session
-
-&#x20;     │
-
-&#x20;     ├── ATutor → student01
-
-&#x20;     │       │
-
-&#x20;     │       └── JupyterHub → student01
-
-&#x20;     │
-
-&#x20;     ├── ATutor logout
-
-&#x20;     │
-
-&#x20;     ├── ATutor → student02
-
-&#x20;     │       │
-
-&#x20;     │       └── JupyterHub → student02
-
-&#x20;     │
-
-&#x20;     └── JupyterHub session → student02
-
-```
-
-
-
-The corresponding JupyterHub login handler explicitly processes the new JWT authentication and replaces the previous JupyterHub login session.
-
-
-
-\---
-
-
-
-\## Deployment Considerations
-
-
-
-The module is designed for a lightweight university deployment.
-
-
-
-The current implementation does not require:
-
-
-
-\* OAuth 2.0;
-
-\* OpenID Connect;
-
-\* an external identity provider;
-
-\* a separate authentication microservice;
-
-\* Kubernetes.
-
-
-
-The authentication exchange is performed directly between ATutor and JupyterHub using the shared JWT secret.
-
-
-
-For production deployment, HTTPS should be enabled so that JWT tokens and authentication requests are protected in transit.
-
-
-
-\---
-
-
-
-\## Troubleshooting
-
-
-
-\### Module name appears as `\[ jupyter\_auth ]`
-
-
-
-The ATutor module name is resolved through the module's language strings.
-
-
-
-The `module.sql` file must be located in the module root:
-
-
-
-```text
-
-jupyter\_auth/module.sql
-
-```
-
-
-
-and must be processed during module installation.
-
-
-
-If the module was previously installed with an incorrect structure, uninstall it and install the corrected release again.
-
-
-
-\### JupyterHub rejects the token
-
-
-
-Check:
-
-
-
-1\. JWT secret is identical on both sides.
-
-2\. Both components use `HS256`.
-
-3\. The JWT contains the `username` claim.
-
-4\. The token has not expired.
-
-5\. The JupyterHub URL is correct.
-
-6\. The JupyterHub authenticator is loaded.
-
-
-
-\### User remains logged in as the previous user
-
-
-
-The current JupyterHub implementation contains a custom login handler designed to replace the previous JupyterHub login session when a new JWT is received.
-
-
-
-If this behavior does not occur, verify that the repository version of:
-
-
-
-```text
-
-jupyterhub/authenticator/20-jwt-auth.py
-
-```
-
-
-
-is the version actually loaded by the running JupyterHub instance.
-
-
-
-\---
-
-
-
-\## Repository
-
-
-
-The module source is maintained as part of the MathBridge EdTech project:
-
-
-
-```text
-
-atutor/jupyter\_auth/
-
-```
-
-
-
-The corresponding JupyterHub authenticator is maintained separately under:
-
-
-
-```text
-
 jupyterhub/authenticator/
-
 ```
 
+The custom authenticator:
 
+1. receives the JWT;
+2. validates the token signature;
+3. validates the token claims;
+4. extracts the username;
+5. establishes the corresponding JupyterHub user session.
 
-\---
+The implementation currently uses the HS256 signing algorithm.
 
+---
 
+## Experimental Background
 
-\## License
+The current implementation was experimentally evaluated in an academic environment at **Ternopil National Technical University (TNTU)**.
 
+The experimental deployment was based on a virtual machine with:
 
+- 4 CPU cores;
+- Intel(R) Core(TM) i5-7400 processor;
+- 4 GB RAM;
+- 30 GB SSD storage.
 
-See the repository-level `LICENSE` file for the applicable license terms.
+The system was used in the context of mathematics education and evaluated with small academic groups.
 
+The initial experimental study focused on the authentication and environment-access process, including the difference between:
 
+- **cold start** — initialization of a new user environment;
+- **warm start** — access to an already initialized environment.
 
+The results indicated that the main source of access-time variation was the initialization of the computational environment rather than the JWT-based authentication procedure.
+
+A broader experimental evaluation is planned as the next stage of the project.
+
+---
+
+## Planned Cloud Deployment
+
+The next phase of MathBridge is planned as a **cloud-based educational pilot** at Ternopil National Technical University.
+
+The purpose of the cloud deployment is to extend the existing local prototype and evaluate the architecture under a larger real-world educational workload.
+
+The planned study will involve approximately **50 engineering students** and will investigate:
+
+- concurrent student access;
+- JupyterHub container startup performance;
+- cold and warm start behavior;
+- resource utilization;
+- system stability under educational workloads;
+- scalability limits of the selected single-node architecture;
+- practical usability in the educational process.
+
+The cloud deployment is intended to provide a substantially broader experimental basis for evaluating the proposed architecture.
+
+---
+
+## Roadmap
+
+### Completed
+
+- [x] Initial MathBridge project definition
+- [x] ATutor–JupyterHub integration
+- [x] JWT-based Single Sign-On
+- [x] Custom JupyterHub JWT authentication
+- [x] Docker-based user isolation
+- [x] ATutor module installation/uninstallation support
+- [x] Local experimental deployment
+- [x] Initial performance evaluation
+- [x] Public GitHub repository
+- [x] Project documentation
+- [x] Initial research software artifact publication
+
+### Planned
+
+- [ ] Cloud deployment
+- [ ] Extended educational pilot
+- [ ] Evaluation with approximately 50 engineering students
+- [ ] Concurrent-load experiments
+- [ ] Resource utilization analysis
+- [ ] Extended cold/warm start analysis
+- [ ] Scalability evaluation
+- [ ] Publication of anonymized experimental data
+- [ ] Publication of log-analysis and statistical-analysis tools
+- [ ] Additional reproducibility artifacts
+- [ ] Research software release
+- [ ] Zenodo archival and DOI assignment
+
+---
+
+## Research and Educational Objectives
+
+The project investigates whether a lightweight integration architecture can provide practical access to interactive computational environments while maintaining:
+
+- low administrative complexity;
+- reasonable resource requirements;
+- user isolation;
+- reproducible computational environments;
+- seamless authentication;
+- suitability for small and medium-sized academic groups.
+
+The broader objective is to contribute to the development of an integrated open-source educational ecosystem for teaching mathematics and engineering disciplines.
+
+---
+
+## Open Source
+
+MathBridge is developed using open-source software and is intended to provide a reproducible and adaptable foundation for educational institutions.
+
+The project does not depend on proprietary LMS or computational-environment components for its core integration mechanism.
+
+The use of open-source technologies is intended to support technological independence and reduce infrastructure barriers for educational institutions.
+
+---
+
+## Limitations
+
+The current implementation and experimental evaluation have several limitations:
+
+- the initial evaluation was conducted on a single virtual machine;
+- the available computational resources were limited;
+- the initial academic groups were relatively small;
+- large-scale concurrent-load testing has not yet been performed;
+- the current deployment does not represent a highly available production infrastructure;
+- the broader cloud-based evaluation remains future work.
+
+These limitations define the motivation for the next stage of the project.
+
+---
+
+## Relation to the Research Project
+
+MathBridge is part of an ongoing research effort to develop practical digital educational ecosystems based on open-source technologies.
+
+The current ATutor–JupyterHub integration represents one stage of this research and focuses specifically on authentication and access integration between the LMS and the computational environment.
+
+The planned cloud deployment will extend the research from a local proof-of-concept and initial educational evaluation toward a broader real-world experimental study.
+
+---
+
+## Citation
+
+If you use the MathBridge software or the ATutor–JupyterHub integration in academic work, please cite the associated research publication.
+
+Citation metadata are provided in:
+
+```text
+CITATION.cff
+```
+
+A persistent archival DOI will be added after the research artifact reaches its final release stage.
+
+---
+
+## Contributing
+
+Contributions, suggestions, and feedback are welcome.
+
+Please see:
+
+```text
+CONTRIBUTING.md
+```
+
+for contribution guidelines.
+
+---
+
+## License
+
+MathBridge is distributed under the **MIT License**.
+
+See:
+
+```text
+LICENSE
+```
+
+for the complete license text.
+
+---
+
+## Contact
+
+**Hryhorii Habrusiev**  
+Ternopil Ivan Puluj National Technical University 
+Ternopil, Ukraine
+
+The project is developed for academic research and educational purposes.
