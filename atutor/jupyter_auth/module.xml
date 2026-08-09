@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module version="1.0">
-    <name lang="en">JWT Authorization</name>
-    <name lang="uk">JWT авторизація</name>
+    <name lang="en">JupyterHub JWT Authentication</name>
+    <name lang="uk">JupyterHub JWT авторизація</name>
 
     <description lang="en">
         Single Sign-On integration between ATutor and JupyterHub using JWT tokens.
@@ -13,11 +13,11 @@
 
     <author>Hryhorii Habrusiev</author>
     <url>https://github.com/hryhorko/mathbridge</url>
-    <license>BSD-3-Clause</license>
+    <license>MIT</license>
 
     <release>
         <version>1.0.0</version>
-        <date>2026-08-07</date>
+        <date>2026-08-09</date>
         <state>stable</state>
     </release>
 </module>
