@@ -5,9 +5,9 @@ INSERT INTO `language_text`
         'en',
         '_module',
         'jupyter_auth',
-        'JWT Authorization',
+        'JupyterHub JWT Authentication',
         NOW(),
-        'JupyterHub JWT Authorization module'
+        'JupyterHub JWT Authentication module'
     );
 
 INSERT INTO `language_text`
@@ -15,7 +15,7 @@ INSERT INTO `language_text`
         'uk',
         '_module',
         'jupyter_auth',
-        'JWT авторизація',
+        'JupyterHub JWT авторизація',
         NOW(),
         'Модуль JWT-авторизації JupyterHub'
     );
@@ -27,7 +27,7 @@ INSERT INTO `language_text`
         'jupyter_auth_desc',
         'Launch JupyterHub with secure JWT-based authentication.',
         NOW(),
-        'JupyterHub JWT Authorization description'
+        'JupyterHub JWT Authentication description'
     );
 
 INSERT INTO `language_text`
