@@ -6,7 +6,7 @@ if (!defined('AT_INCLUDE_PATH')) {
 
 class JupyterAuthConfig
 {
-    const HUB_URL = 'https://YOUR-JUPYTERHUB-HOST';
+    const HUB_URL = 'http://YOUR-JUPYTERHUB-HOST';
 
     const TOKEN_LIFETIME = 300;
 
