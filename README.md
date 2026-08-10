@@ -291,6 +291,85 @@ A broader experimental evaluation is planned as the next stage of the project.
 
 ---
 
+## Initial Experimental Evidence
+
+The initial experimental evaluation compared access times for cold-start and
+warm-start sessions in the deployed ATutor–JupyterHub environment.
+
+Normality of the two samples was assessed using the Shapiro–Wilk test. Since
+both samples deviated from a normal distribution, the non-parametric
+Mann–Whitney U test was used for statistical comparison.
+
+### Descriptive Statistics
+
+| Metric | Cold start | Warm start |
+|---|---:|---:|
+| Number of sessions | 15 | 58 |
+| Mean access time (s) | 3.06 | 0.09 |
+| Median access time (s) | 2.90 | 0.053 |
+| Q1 (s) | 2.31 | 0.049 |
+| Q3 (s) | 3.72 | 0.057 |
+| IQR (s) | 1.41 | 0.008 |
+| Standard deviation (s) | 0.89 | 0.10 |
+| Minimum (s) | 2.13 | 0.045 |
+| Maximum (s) | 4.96 | 0.43 |
+
+The median access time was approximately 55 times higher for cold-start
+sessions than for warm-start sessions. The substantially smaller IQR for
+warm-start sessions also indicates more stable access times when the
+computational container is already running.
+
+### Statistical Comparison
+
+| Statistic | Value |
+|---|---:|
+| Mann–Whitney U | 870 |
+| p-value | 1.4 × 10⁻⁹ |
+| Rank-biserial correlation | ≈ 1.0 |
+| Statistical conclusion | Significant difference (p < 0.001) |
+
+The Mann–Whitney U test demonstrated a statistically significant difference
+between cold-start and warm-start access times (U = 870, p = 1.4 × 10⁻⁹).
+The rank-biserial correlation was approximately 1.0, indicating a very large
+effect and near-complete separation between the two samples.
+
+The results indicate that the dominant contribution to access latency is
+associated with initialization of the user's Docker container, whereas the
+JWT-based authentication overhead represents a relatively small component of
+the overall access time.
+
+These results provide the empirical basis for the next stage of the research,
+which will investigate the behavior of the same architecture under a larger
+concurrent academic workload in a cloud environment.
+
+---
+
+## Why Cloud Infrastructure Is Needed
+
+The initial prototype was deployed and evaluated on a resource-constrained
+virtual machine with 4 CPU cores and 4 GB of RAM. This configuration was
+sufficient to validate the ATutor–JupyterHub integration, verify the
+JWT-based SSO mechanism, and perform the initial cold-start/warm-start
+performance experiment.
+
+However, the same infrastructure is not sufficient for evaluating the system
+under a larger concurrent academic workload. The next stage of the research
+therefore requires a controlled cloud environment in which approximately
+50 students can access isolated computational environments during scheduled
+university classes.
+
+The planned cloud deployment will be used as an experimental infrastructure
+rather than simply as a hosting environment. It will enable the study of
+concurrent user access, resource utilization, container startup behavior,
+system stability, and the scalability limits of the selected single-node
+architecture.
+
+The cloud experiment is therefore intended to extend the existing
+laboratory-scale evaluation and provide empirical evidence on the feasibility
+of using the proposed architecture for larger academic groups.
+
+---
+
 ## Planned Cloud Deployment
 
 The next phase of MathBridge is planned as a **cloud-based educational pilot** at Ternopil National Technical University.
